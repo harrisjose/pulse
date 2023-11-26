@@ -1,0 +1,9 @@
+{
+    "editor.formatOnSave": true,
+    "editor.wordWrap": "bounded",
+    "editor.rulers": [
+        80
+    ],
+    "editor.indentSize": "tabSize",
+    "editor.tabSize": 2
+}
