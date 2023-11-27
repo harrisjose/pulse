@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "pulse",
-    "version": "0.0.0"
+    "version": "0.0.1"
   },
   "tauri": {
     "allowlist": {
@@ -20,7 +20,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "com.pulse.dev",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -36,15 +36,16 @@
     "windows": [
       {
         "label": "main",
+        "height": 200,
+        "width": 200,
+        "title": "Pulse",
         "fullscreen": false,
-        "height": 400,
         "resizable": false,
-        "title": "Pulse preferences",
-        "width": 500,
+        "hiddenTitle": true,
         "visible": false,
-        "decorations": true,
+        "decorations": false,
         "focus": false,
-        "transparent": false,
+        "transparent": true,
         "skipTaskbar": true,
         "alwaysOnTop": true
       }
@@ -52,7 +53,7 @@
     "systemTray": {
       "iconPath": "icons/icon.png",
       "iconAsTemplate": true,
-      "menuOnLeftClick": true
+      "menuOnLeftClick": false
     }
   }
 }

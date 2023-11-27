@@ -1,7 +1,14 @@
 {
+    "editor.formatOnSave": true,
     "rust-analyzer.linkedProjects": [
         "./src-tauri/Cargo.toml"
     ],
     "rust-analyzer.checkOnSave": true,
-    "editor.formatOnSave": true
+    "tailwind-fold.foldStyle": "QUOTES",
+    "editor.wordWrap": "bounded",
+    "editor.rulers": [
+        80
+    ],
+    "editor.indentSize": "tabSize",
+    "editor.tabSize": 2
 }
