@@ -1,5 +1,5 @@
 import { EventEmitter } from "stream";
-import { HealthState, SlackConnectorConfig } from "../../common/types";
+import { HealthState, SlackConnectorConfig } from "../common/types";
 
 export default class SlackConnector {
   private info = { name: "slack" } as const;

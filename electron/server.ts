@@ -1,12 +1,12 @@
-import { app, BrowserWindow } from "electron";
+import { app } from "electron";
 import { createIPCHandler } from "electron-trpc/main";
 import { EventEmitter } from "events";
 import path from "path";
 import { ApiConnectorConfig, Connectors, PulseConfig } from "../common/types";
+import ApiConnector from "../connectors/api";
+import SlackConnector from "../connectors/slack";
 import { createRouter } from "./api";
 import { loadConfig } from "./config";
-import ApiConnector from "./connectors/api";
-import SlackConnector from "./connectors/slack";
 import createWindow from "./window";
 
 process.env.DIST = path.join(__dirname, "../dist");

@@ -14,7 +14,7 @@
     "@trpc/client": "10.33.1",
     "@trpc/react-query": "10.33.1",
     "@trpc/server": "10.33.1",
-    "electron": "^25.1.1",
+    "electron": "^27.1.2",
     "electron-log": "^5.0.1",
     "electron-trpc": "0.5.2",
     "electron-util": "^0.17.2",

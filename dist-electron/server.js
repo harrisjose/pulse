@@ -248,6 +248,144 @@ const X = ({
   router: r,
   windows: n = []
 }) => new G({ createContext: e, router: r, windows: n });
+var HealthState = /* @__PURE__ */ ((HealthState2) => {
+  HealthState2[HealthState2["Active"] = 0] = "Active";
+  HealthState2[HealthState2["Retrying"] = 1] = "Retrying";
+  HealthState2[HealthState2["Disabled"] = 2] = "Disabled";
+  return HealthState2;
+})(HealthState || {});
+class ApiConnector {
+  constructor(config, emitter2) {
+    __publicField(this, "info", { name: "api" });
+    __publicField(this, "config");
+    __publicField(this, "isActive");
+    __publicField(this, "healthState");
+    __publicField(this, "emitter");
+    this.config = config;
+    this.isActive = false;
+    this.healthState = HealthState.Active;
+    this.emitter = emitter2;
+  }
+  sync() {
+    this.emitter.emit("onStatusChange", {
+      ...this.info,
+      status: this.isActive
+    });
+  }
+  async fetchStatus() {
+    if (!this.config.enabled || this.healthState === HealthState.Disabled)
+      return;
+    try {
+      const response = await fetch(this.config.readUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+      const data = await response.json();
+      this.isActive = data.status;
+      this.healthState = HealthState.Active;
+      this.sync();
+    } catch (error) {
+      console.error("Error getting API status:", error);
+      this.healthState = HealthState.Retrying;
+    }
+  }
+  async setStatus(active) {
+    if (!this.config.enabled || this.healthState === HealthState.Disabled)
+      return;
+    try {
+      const payload = { ...this.config.data, status: active };
+      await fetch(this.config.writeUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      this.isActive = active;
+      this.healthState = HealthState.Active;
+      this.sync();
+    } catch (error) {
+      console.error("Error setting API status:", error);
+      this.healthState = HealthState.Retrying;
+    }
+  }
+  isActiveStatus() {
+    return this.isActive;
+  }
+  getHealthState() {
+    return this.healthState;
+  }
+}
+class SlackConnector {
+  constructor(config, emitter2) {
+    __publicField(this, "info", { name: "slack" });
+    __publicField(this, "config");
+    __publicField(this, "isActive");
+    __publicField(this, "healthState");
+    __publicField(this, "emitter");
+    this.config = config;
+    this.isActive = false;
+    this.healthState = HealthState.Active;
+    this.emitter = emitter2;
+  }
+  sync() {
+    this.emitter.emit("onStatusChange", {
+      ...this.info,
+      status: this.isActive
+    });
+  }
+  async fetchStatus() {
+    if (!this.config.enabled || this.healthState === HealthState.Disabled)
+      return;
+    try {
+      const response = await fetch("https://slack.com/api/users.getPresence", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.config.token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      const data = await response.json();
+      console.log(data);
+      this.isActive = data.presence === "active";
+      this.healthState = HealthState.Active;
+      this.sync();
+    } catch (error) {
+      console.error("Error getting Slack presence:", error);
+      this.healthState = HealthState.Retrying;
+    }
+  }
+  async setStatus(active) {
+    if (!this.config.enabled || this.healthState === HealthState.Disabled)
+      return;
+    try {
+      const presence = active ? "auto" : "away";
+      const result = await fetch("https://slack.com/api/users.setPresence", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.config.token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ presence })
+      });
+      console.log(await result.json());
+      this.isActive = active;
+      this.healthState = HealthState.Active;
+      this.sync();
+    } catch (error) {
+      console.error("Error setting Slack presence:", error);
+      this.healthState = HealthState.Retrying;
+    }
+  }
+  isActiveStatus() {
+    return this.isActive;
+  }
+  getHealthState() {
+    return this.healthState;
+  }
+}
 function isObject(value) {
   return !!value && !Array.isArray(value) && typeof value === "object";
 }
@@ -4779,144 +4917,6 @@ function loadConfig() {
     throw error;
   }
 }
-var HealthState = /* @__PURE__ */ ((HealthState2) => {
-  HealthState2[HealthState2["Active"] = 0] = "Active";
-  HealthState2[HealthState2["Retrying"] = 1] = "Retrying";
-  HealthState2[HealthState2["Disabled"] = 2] = "Disabled";
-  return HealthState2;
-})(HealthState || {});
-class ApiConnector {
-  constructor(config, emitter2) {
-    __publicField(this, "info", { name: "api" });
-    __publicField(this, "config");
-    __publicField(this, "isActive");
-    __publicField(this, "healthState");
-    __publicField(this, "emitter");
-    this.config = config;
-    this.isActive = false;
-    this.healthState = HealthState.Active;
-    this.emitter = emitter2;
-  }
-  sync() {
-    this.emitter.emit("onStatusChange", {
-      ...this.info,
-      status: this.isActive
-    });
-  }
-  async fetchStatus() {
-    if (!this.config.enabled || this.healthState === HealthState.Disabled)
-      return;
-    try {
-      const response = await fetch(this.config.readUrl, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-      const data = await response.json();
-      this.isActive = data.status;
-      this.healthState = HealthState.Active;
-      this.sync();
-    } catch (error) {
-      console.error("Error getting API status:", error);
-      this.healthState = HealthState.Retrying;
-    }
-  }
-  async setStatus(active) {
-    if (!this.config.enabled || this.healthState === HealthState.Disabled)
-      return;
-    try {
-      const payload = { ...this.config.data, status: active };
-      await fetch(this.config.writeUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-      this.isActive = active;
-      this.healthState = HealthState.Active;
-      this.sync();
-    } catch (error) {
-      console.error("Error setting API status:", error);
-      this.healthState = HealthState.Retrying;
-    }
-  }
-  isActiveStatus() {
-    return this.isActive;
-  }
-  getHealthState() {
-    return this.healthState;
-  }
-}
-class SlackConnector {
-  constructor(config, emitter2) {
-    __publicField(this, "info", { name: "slack" });
-    __publicField(this, "config");
-    __publicField(this, "isActive");
-    __publicField(this, "healthState");
-    __publicField(this, "emitter");
-    this.config = config;
-    this.isActive = false;
-    this.healthState = HealthState.Active;
-    this.emitter = emitter2;
-  }
-  sync() {
-    this.emitter.emit("onStatusChange", {
-      ...this.info,
-      status: this.isActive
-    });
-  }
-  async fetchStatus() {
-    if (!this.config.enabled || this.healthState === HealthState.Disabled)
-      return;
-    try {
-      const response = await fetch("https://slack.com/api/users.getPresence", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.config.token}`,
-          "Content-Type": "application/json"
-        }
-      });
-      const data = await response.json();
-      console.log(data);
-      this.isActive = data.presence === "active";
-      this.healthState = HealthState.Active;
-      this.sync();
-    } catch (error) {
-      console.error("Error getting Slack presence:", error);
-      this.healthState = HealthState.Retrying;
-    }
-  }
-  async setStatus(active) {
-    if (!this.config.enabled || this.healthState === HealthState.Disabled)
-      return;
-    try {
-      const presence = active ? "auto" : "away";
-      const result = await fetch("https://slack.com/api/users.setPresence", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.config.token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ presence })
-      });
-      console.log(await result.json());
-      this.isActive = active;
-      this.healthState = HealthState.Active;
-      this.sync();
-    } catch (error) {
-      console.error("Error setting Slack presence:", error);
-      this.healthState = HealthState.Retrying;
-    }
-  }
-  isActiveStatus() {
-    return this.isActive;
-  }
-  getHealthState() {
-    return this.healthState;
-  }
-}
 var electronUtil = {};
 var newGithubIssueUrl = { exports: {} };
 (function(module2) {
@@ -5292,13 +5292,17 @@ function createWindow() {
     frame: false,
     fullscreenable: false,
     resizable: false,
+    skipTaskbar: true,
+    transparent: true,
+    vibrancy: "menu",
     webPreferences: {
       preload,
-      devTools: true
+      devTools: electronUtil.is.development
     }
   });
   if (electronUtil.is.development) {
     win.loadURL(url);
+    win.webContents.openDevTools({ mode: "detach" });
   } else {
     win.loadFile(path.join(process.env.DIST, "index.html"));
   }
@@ -5312,21 +5316,22 @@ function createWindow() {
     const y2 = Math.round(trayBounds.y + trayBounds.height);
     return { x: x2, y: y2 };
   };
-  const tray = new require$$0.Tray(icon);
-  tray.setIgnoreDoubleClickEvents(true);
-  tray.on("click", () => {
+  const toggleVisibility = () => {
     if (win.isVisible()) {
       win.hide();
+      tray.focus();
     } else {
       const position = getWindowPosition();
       win.setPosition(position.x, position.y, false);
+      win.setVisibleOnAllWorkspaces(true, { skipTransformProcessType: true });
       win.show();
-      win.setVisibleOnAllWorkspaces(true);
-      win.focus();
-      win.setVisibleOnAllWorkspaces(false);
+      win.setVisibleOnAllWorkspaces(false, { skipTransformProcessType: true });
+      win.once("blur", () => {
+        win.hide();
+      });
     }
-  });
-  tray.on("right-click", () => {
+  };
+  const showContextMenu = () => {
     tray.popUpContextMenu(
       require$$0.Menu.buildFromTemplate([
         {
@@ -5343,7 +5348,11 @@ function createWindow() {
         }
       ])
     );
-  });
+  };
+  const tray = new require$$0.Tray(icon);
+  tray.setIgnoreDoubleClickEvents(true);
+  tray.on("click", toggleVisibility);
+  tray.on("right-click", showContextMenu);
   return win;
 }
 process.env.DIST = path.join(__dirname, "../dist");

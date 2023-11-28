@@ -10,13 +10,13 @@ const ApiStatusComponent = ({ active }: { active: boolean }) => {
   return (
     <div className="flex items-center">
       <div
-        className={`rounded-full p-1 flex justify-center items-center mr-2 ${
+        className={`rounded-full p-1.5 flex justify-center items-center mr-2.5 ${
           active ? "bg-primary" : "bg-slate-800"
         }`}
       >
         <PersonalLogo className="w-4 h-3.5"></PersonalLogo>
       </div>
-      <div className="font-light text-sm">Personal</div>
+      <div className="font-light">Personal</div>
     </div>
   );
 };
@@ -25,24 +25,25 @@ const SlackStatusComponent = ({ active }: { active: boolean }) => {
   return (
     <div className="flex items-center">
       <div
-        className={`rounded-full p-1 flex justify-center items-center mr-2 ${
+        className={`rounded-full p-1.5 flex justify-center items-center mr-2.5 ${
           active ? "bg-primary" : "bg-slate-800"
         }`}
       >
         <SlackLogo className="w-4 h-3.5"></SlackLogo>
       </div>
-      <div className="font-light text-sm">Slack</div>
+      <div className="font-light">Slack</div>
     </div>
   );
 };
 
 function App() {
-  const [isActive, toggleActive] = useState(false);
   const [connections, setConnections] = useState<Connections>({});
 
   const { data } = trpcReact.initial.useQuery();
   useEffect(() => {
-    if (data) setConnections(data as Connections);
+    if (data) {
+      setConnections(data as Connections);
+    }
   }, [data]);
 
   trpcReact.subscribeStatus.useSubscription(undefined, {
@@ -53,6 +54,9 @@ function App() {
     },
   });
 
+  const isActive = () => {
+    return Object.values(connections).every((v) => v);
+  };
   const canShow = (name: keyof Connections) => {
     return connections[name] !== undefined;
   };
@@ -60,30 +64,30 @@ function App() {
   const mutation = trpcReact.updateStatus.useMutation();
   const changeStatus = useCallback(
     async (active: boolean) => {
-      toggleActive(active);
       mutation.mutate({ active });
     },
     [mutation]
   );
 
   return (
-    <div className="bg-black min-h-[200px] h-full w-full border rounded-md border-white border-opacity-20 text-white p-3 flex flex-col space-y-3">
-      <div className="flex justify-between mb-2">
-        <div className="font-semibold text-sm">Available</div>
+    <div className="min-h-[200px] h-full w-full text-white p-4 flex flex-col space-y-3">
+      <div className="flex justify-between items-center">
+        <div className="font-medium">Available</div>
         <SwitchPrimitives.Root
-          checked={isActive}
+          checked={isActive()}
           onCheckedChange={(checked) => changeStatus(checked)}
           className={
-            "peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
+            "peer inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full border border-white border-opacity-10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-white/10"
           }
         >
           <SwitchPrimitives.Thumb
             className={
-              "pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0"
+              "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0"
             }
           />
         </SwitchPrimitives.Root>
       </div>
+      <hr className="opacity-20" />
       {canShow("slack") && (
         <SlackStatusComponent active={connections["slack"]!} />
       )}

@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { ApiConnectorConfig, HealthState } from "../../common/types";
+import { ApiConnectorConfig, HealthState } from "../common/types";
 
 export default class ApiConnector {
   private info = { name: "api" } as const;

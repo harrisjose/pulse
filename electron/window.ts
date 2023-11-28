@@ -13,15 +13,18 @@ export default function createWindow() {
     frame: false,
     fullscreenable: false,
     resizable: false,
+    skipTaskbar: true,
+    transparent: true,
+    vibrancy: "menu",
     webPreferences: {
       preload,
-      devTools: true,
+      devTools: is.development,
     },
   });
 
   if (is.development) {
     win.loadURL(url!);
-    // win.webContents.openDevTools({ mode: "detach" });
+    win.webContents.openDevTools({ mode: "detach" });
   } else {
     win.loadFile(path.join(process.env.DIST!, "index.html"));
   }
@@ -36,24 +39,22 @@ export default function createWindow() {
     const y = Math.round(trayBounds.y + trayBounds.height);
     return { x, y };
   };
-
-  const tray = new Tray(icon);
-  tray.setIgnoreDoubleClickEvents(true);
-
-  tray.on("click", () => {
+  const toggleVisibility = () => {
     if (win.isVisible()) {
       win.hide();
+      tray.focus();
     } else {
       const position = getWindowPosition();
       win.setPosition(position.x, position.y, false);
+      win.setVisibleOnAllWorkspaces(true, { skipTransformProcessType: true });
       win.show();
-      win.setVisibleOnAllWorkspaces(true);
-      win.focus();
-      win.setVisibleOnAllWorkspaces(false);
+      win.setVisibleOnAllWorkspaces(false, { skipTransformProcessType: true });
+      win.once("blur", () => {
+        win.hide();
+      });
     }
-  });
-
-  tray.on("right-click", () => {
+  };
+  const showContextMenu = () => {
     tray.popUpContextMenu(
       Menu.buildFromTemplate([
         {
@@ -69,7 +70,12 @@ export default function createWindow() {
         },
       ])
     );
-  });
+  };
+
+  const tray = new Tray(icon);
+  tray.setIgnoreDoubleClickEvents(true);
+  tray.on("click", toggleVisibility);
+  tray.on("right-click", showContextMenu);
 
   return win;
 }
